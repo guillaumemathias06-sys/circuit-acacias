@@ -24,17 +24,12 @@ export async function POST(req: NextRequest) {
   const existingAuthUser = existingUsers?.users?.find((u) => u.email === email)
 
   let userId: string
-  // Générer un mot de passe temporaire à chaque invitation
-  const password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-4).toUpperCase() + '!'
 
   if (existingAuthUser) {
     userId = existingAuthUser.id
-    // Mettre à jour le mot de passe pour que le joueur puisse se connecter
-    await admin.auth.admin.updateUserById(userId, { password })
   } else {
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
-      password,
       email_confirm: true,
       user_metadata: { first_name, last_name },
     })
@@ -69,32 +64,40 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Envoyer l'email de bienvenue
-  {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://circuit-acacias.vercel.app'
-    try {
-      await sendGmail({
-        to: email,
-        subject: 'Bienvenue sur le Circuit Acacias !',
-        html: `
-          <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:32px">
-            <h2 style="color:#15803d">Bienvenue sur le Circuit Acacias, ${first_name} !</h2>
-            <p>Un compte a été créé pour vous. Voici vos identifiants de connexion :</p>
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0">
-              <p style="margin:4px 0"><strong>Email :</strong> ${email}</p>
-              <p style="margin:4px 0"><strong>Mot de passe temporaire :</strong> <code style="background:#dcfce7;padding:2px 6px;border-radius:4px">${password}</code></p>
-            </div>
-            <p>Connectez-vous et changez votre mot de passe dès que possible.</p>
-            <a href="${siteUrl}/connexion" style="display:inline-block;background:#16a34a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:8px">
-              Accéder au Circuit Acacias
-            </a>
-            <p style="color:#9ca3af;font-size:12px;margin-top:32px">Tennis Club des Acacias</p>
+  // Générer un lien de définition de mot de passe
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://circuit-acacias.vercel.app'
+  const { data: linkData } = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: `${siteUrl}/espace-joueur/profil` },
+  })
+
+  const resetLink = linkData?.properties?.action_link ?? `${siteUrl}/connexion`
+
+  try {
+    await sendGmail({
+      to: email,
+      subject: 'Bienvenue sur le Circuit Acacias — Créez votre mot de passe',
+      html: `
+        <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:32px">
+          <div style="background:#16a34a;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+            <p style="color:white;font-size:20px;font-weight:900;margin:0">Circuit Acacias</p>
+            <p style="color:#bbf7d0;font-size:13px;margin:4px 0 0">Tennis Club des Acacias</p>
           </div>
-        `,
-      })
-    } catch (e) {
-      console.error('Gmail send error:', e)
-    }
+          <h2 style="color:#111;font-size:22px">Bonjour ${first_name} !</h2>
+          <p style="color:#555">Un compte a été créé pour vous sur le Circuit Acacias. Cliquez sur le bouton ci-dessous pour choisir votre mot de passe et accéder à votre espace joueur.</p>
+          <div style="text-align:center;margin:32px 0">
+            <a href="${resetLink}" style="display:inline-block;background:#16a34a;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:15px">
+              Créer mon mot de passe →
+            </a>
+          </div>
+          <p style="color:#888;font-size:13px">Ce lien est valable 24 heures. Si vous n'attendiez pas cet email, ignorez-le.</p>
+          <p style="color:#bbb;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px">Tennis Club des Acacias · Circuit homologué FFT</p>
+        </div>
+      `,
+    })
+  } catch (e) {
+    console.error('Gmail send error:', e)
   }
 
   return NextResponse.json({ success: true, userId, isNew: !existingAuthUser })

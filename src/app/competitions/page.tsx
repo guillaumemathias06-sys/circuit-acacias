@@ -1,28 +1,53 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { CompetitionCard } from '@/components/competitions/CompetitionCard'
-import { Calendar } from 'lucide-react'
+import { Calendar, Filter } from 'lucide-react'
 import type { Competition } from '@/types'
 
-export const revalidate = 60
+export default function CompetitionsPage() {
+  const [competitions, setCompetitions] = useState<Competition[]>([])
+  const [userCategoryId, setUserCategoryId] = useState<string | null>(null)
+  const [filterMine, setFilterMine] = useState(true)
+  const [dateFrom, setDateFrom] = useState('')
+  const [loading, setLoading] = useState(true)
 
-export default async function CompetitionsPage() {
-  const supabase = await createClient()
+  useEffect(() => {
+    const supabase = createClient()
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('users').select('category_id').eq('id', user.id).single()
+        setUserCategoryId(profile?.category_id ?? null)
+      }
 
-  const { data: competitions } = await supabase
-    .from('competitions')
-    .select('*, category:categories(*), points_scale:points_scales(*), registrations_count:registrations(count)')
-    .neq('status', 'draft')
-    .order('date', { ascending: true })
+      const { data } = await supabase
+        .from('competitions')
+        .select('*, category:categories(*), points_scale:points_scales(*), registrations_count:registrations(count)')
+        .neq('status', 'draft')
+        .order('date', { ascending: true })
+      setCompetitions(data ?? [])
+      setLoading(false)
+    }
+    load()
+  }, [])
 
-  const grouped = (competitions ?? []).reduce<Record<string, Competition[]>>((acc, c) => {
+  const filtered = competitions.filter((c) => {
+    if (filterMine && userCategoryId && c.category_id !== userCategoryId) return false
+    if (dateFrom && c.date < dateFrom) return false
+    return true
+  })
+
+  const grouped = filtered.reduce<Record<string, Competition[]>>((acc, c) => {
     const cat = c.category?.name ?? 'Autres'
     if (!acc[cat]) acc[cat] = []
     acc[cat].push(c)
     return acc
   }, {})
 
-  const total = competitions?.length ?? 0
-  const open = competitions?.filter((c) => c.status === 'open').length ?? 0
+  const total = competitions.length
+  const open = competitions.filter((c) => c.status === 'open').length
 
   return (
     <div>
@@ -52,15 +77,54 @@ export default async function CompetitionsPage() {
         </div>
       </section>
 
+      {/* Filtres */}
+      <div className="border-b border-gray-200 bg-white sticky top-16 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Filter size={14} />
+            <span className="font-medium">Filtres</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">À partir du</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-green-500"
+            />
+            {dateFrom && (
+              <button onClick={() => setDateFrom('')} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+            )}
+          </div>
+          {userCategoryId && (
+            <label className="flex items-center gap-2 cursor-pointer ml-auto">
+              <div
+                onClick={() => setFilterMine((v) => !v)}
+                className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${filterMine ? 'bg-green-500' : 'bg-gray-300'}`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${filterMine ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="text-sm text-gray-600">Afficher uniquement les compétitions auxquelles j'ai le droit de participer</span>
+            </label>
+          )}
+        </div>
+      </div>
+
       {/* Content */}
       <section className="max-w-7xl mx-auto px-6 py-12">
-        {Object.keys(grouped).length === 0 ? (
+        {loading ? (
+          <div className="text-center py-24 text-gray-400">Chargement...</div>
+        ) : Object.keys(grouped).length === 0 ? (
           <div className="text-center py-24">
             <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Calendar size={24} className="text-gray-300" />
             </div>
-            <p className="text-gray-400 font-medium">Aucune compétition publiée pour le moment.</p>
-            <p className="text-gray-300 text-sm mt-1">Revenez bientôt — la saison est en cours de planification.</p>
+            <p className="text-gray-400 font-medium">Aucune compétition pour ces critères.</p>
+            {filterMine && (
+              <button onClick={() => setFilterMine(false)} className="text-green-600 text-sm mt-2 hover:underline">
+                Voir toutes les compétitions
+              </button>
+            )}
           </div>
         ) : (
           Object.entries(grouped).map(([category, comps]) => (

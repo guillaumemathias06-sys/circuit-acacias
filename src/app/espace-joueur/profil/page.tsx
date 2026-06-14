@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, User } from 'lucide-react'
+import { ArrowLeft, Save, User, CheckCircle } from 'lucide-react'
 
 const FFT_RANKINGS = [
   '40', '30/5', '30/4', '30/3', '30/2', '30/1', '30',
@@ -14,6 +14,8 @@ const FFT_RANKINGS = [
 
 export default function ProfilPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const justUpdated = searchParams.get('updated') === '1'
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -68,6 +70,27 @@ export default function ProfilPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    // Vérifier les champs obligatoires
+    if (!form.first_name || !form.last_name || !form.gender || !form.birth_date || !form.fft_license_number || !form.fft_ranking || !form.category_id) {
+      setError('Tous les champs sont obligatoires.')
+      setLoading(false)
+      return
+    }
+
+    // Vérifier qu'il n'y a pas de doublon sur la licence FFT
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('fft_license_number', form.fft_license_number)
+      .neq('id', user.id)
+      .maybeSingle()
+
+    if (existing) {
+      setError('Ce numéro de licence FFT est déjà utilisé par un autre compte.')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.from('users').update({
       ...form,
       birth_date: form.birth_date || null,
@@ -82,8 +105,8 @@ export default function ProfilPage() {
 
     if (error) { setError(error.message); setLoading(false); return }
     setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
     setLoading(false)
+    setTimeout(() => router.push('/espace-joueur/profil?updated=1'), 1000)
   }
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -91,6 +114,13 @@ export default function ProfilPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Bannière confirmation */}
+      {justUpdated && (
+        <div className="bg-green-500 text-white px-6 py-3 flex items-center gap-2 justify-center text-sm font-medium">
+          <CheckCircle size={16} />
+          Profil mis à jour avec succès !
+        </div>
+      )}
       {/* Header */}
       <div className="bg-gray-950 border-b border-gray-800 px-6 py-8">
         <div className="max-w-2xl mx-auto">
