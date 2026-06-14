@@ -16,31 +16,10 @@ export default function NouveauMotDePassePage() {
 
   useEffect(() => {
     const supabase = createClient()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        setReady(true)
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
+      else setError('Lien expiré ou invalide. Demandez une nouvelle invitation à l\'administrateur.')
     })
-
-    // Forcer la lecture du hash si présent dans l'URL
-    const hash = window.location.hash
-    if (hash && hash.includes('access_token')) {
-      // Supabase le détecte automatiquement, on attend un peu
-      setTimeout(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) setReady(true)
-          else setError('Lien expiré ou invalide. Demandez une nouvelle invitation.')
-        })
-      }, 1500)
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) setReady(true)
-        else setError('Lien invalide. Demandez une nouvelle invitation à l\'administrateur.')
-      })
-    }
-
-    return () => subscription.unsubscribe()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
