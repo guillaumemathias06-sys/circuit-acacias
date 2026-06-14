@@ -66,13 +66,16 @@ export async function POST(req: NextRequest) {
 
   // Générer un lien de définition de mot de passe
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://circuit-acacias.vercel.app'
-  const { data: linkData } = await admin.auth.admin.generateLink({
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
     type: 'recovery',
     email,
     options: { redirectTo: `${siteUrl}/nouveau-mot-de-passe` },
   })
 
+  console.log('generateLink result:', JSON.stringify({ linkData, linkError }))
+
   const resetLink = linkData?.properties?.action_link ?? `${siteUrl}/connexion`
+  console.log('resetLink:', resetLink)
 
   try {
     await sendGmail({
@@ -96,8 +99,10 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     })
+    console.log('Email envoyé avec succès à', email)
   } catch (e) {
     console.error('Gmail send error:', e)
+    return NextResponse.json({ error: 'Erreur envoi email: ' + (e as Error).message }, { status: 500 })
   }
 
   return NextResponse.json({ success: true, userId, isNew: !existingAuthUser })
