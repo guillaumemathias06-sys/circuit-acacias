@@ -15,11 +15,18 @@ export default function NouveauMotDePassePage() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    // Supabase injecte la session depuis le hash de l'URL automatiquement
     const supabase = createClient()
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true)
+    // Attendre que Supabase traite le token depuis le hash de l'URL
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setReady(true)
+      }
     })
+    // Vérifier aussi si une session existe déjà
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true)
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
