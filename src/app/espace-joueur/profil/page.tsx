@@ -71,7 +71,7 @@ function ProfilPageInner() {
     if (!user) return
 
     // Vérifier les champs obligatoires
-    if (!form.first_name || !form.last_name || !form.gender || !form.birth_date || !form.fft_license_number || !form.fft_ranking || !form.category_id) {
+    if (!form.first_name || !form.last_name || !form.gender || !form.birth_date || !form.phone || !form.fft_license_number || !form.fft_ranking || !form.fft_club || !form.category_id) {
       setError('Tous les champs sont obligatoires.')
       setLoading(false)
       return
@@ -155,20 +155,20 @@ function ProfilPageInner() {
                 <input required className="input" value={form.last_name} onChange={set('last_name')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Date de naissance</label>
-                <input type="date" className="input" value={form.birth_date} onChange={set('birth_date')} />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Date de naissance *</label>
+                <input required type="date" className="input" value={form.birth_date} onChange={set('birth_date')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Sexe</label>
-                <select className="input" value={form.gender} onChange={set('gender')}>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Sexe *</label>
+                <select required className="input" value={form.gender} onChange={set('gender')}>
                   <option value="">— Choisir —</option>
                   <option value="M">Homme</option>
                   <option value="F">Femme</option>
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Téléphone</label>
-                <input type="tel" className="input" value={form.phone} onChange={set('phone')} placeholder="06 00 00 00 00" />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Téléphone *</label>
+                <input required type="tel" className="input" value={form.phone} onChange={set('phone')} placeholder="06 00 00 00 00" />
               </div>
             </div>
           </div>
@@ -179,8 +179,9 @@ function ProfilPageInner() {
             <p className="text-xs text-gray-400 mb-4">Ces données permettent de vous identifier dans les imports Ten'Up / MOJA.</p>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Numéro de licence FFT</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Numéro de licence FFT *</label>
                 <input
+                  required
                   className="input font-mono"
                   value={form.fft_license_number}
                   onChange={set('fft_license_number')}
@@ -188,25 +189,25 @@ function ProfilPageInner() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Classement FFT</label>
-                <select className="input" value={form.fft_ranking} onChange={set('fft_ranking')}>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Classement FFT *</label>
+                <select required className="input" value={form.fft_ranking} onChange={set('fft_ranking')}>
                   <option value="">— Choisir —</option>
                   {FFT_RANKINGS.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Club</label>
-                <input className="input" value={form.fft_club} onChange={set('fft_club')} placeholder="TC des Acacias" />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Club *</label>
+                <input required className="input" value={form.fft_club} onChange={set('fft_club')} placeholder="TC des Acacias" />
               </div>
             </div>
           </div>
 
           {/* Catégorie Circuit */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-gray-900 mb-1 text-sm uppercase tracking-wider text-gray-400">Catégorie Circuit</h2>
+            <h2 className="font-bold text-gray-900 mb-1 text-sm uppercase tracking-wider text-gray-400">Catégorie Circuit *</h2>
             <p className="text-xs text-gray-400 mb-4">Votre catégorie dans le Circuit Acacias.</p>
-            <select className="input" value={form.category_id} onChange={set('category_id')}>
-              <option value="">— Non définie —</option>
+            <select required className="input" value={form.category_id} onChange={set('category_id')}>
+              <option value="">— Choisir —</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
