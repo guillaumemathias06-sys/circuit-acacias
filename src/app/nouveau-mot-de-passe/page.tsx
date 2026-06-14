@@ -16,16 +16,30 @@ export default function NouveauMotDePassePage() {
 
   useEffect(() => {
     const supabase = createClient()
-    // Attendre que Supabase traite le token depuis le hash de l'URL
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setReady(true)
       }
     })
-    // Vérifier aussi si une session existe déjà
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
-    })
+
+    // Forcer la lecture du hash si présent dans l'URL
+    const hash = window.location.hash
+    if (hash && hash.includes('access_token')) {
+      // Supabase le détecte automatiquement, on attend un peu
+      setTimeout(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) setReady(true)
+          else setError('Lien expiré ou invalide. Demandez une nouvelle invitation.')
+        })
+      }, 1500)
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) setReady(true)
+        else setError('Lien invalide. Demandez une nouvelle invitation à l\'administrateur.')
+      })
+    }
+
     return () => subscription.unsubscribe()
   }, [])
 
@@ -52,7 +66,9 @@ export default function NouveauMotDePassePage() {
           <p className="text-gray-400 text-sm">Choisissez un mot de passe sécurisé pour accéder à votre espace joueur.</p>
         </div>
 
-        {!ready ? (
+        {error && !ready ? (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-4 text-sm text-red-400 text-center">{error}</div>
+        ) : !ready ? (
           <div className="text-center text-gray-400 text-sm">
             <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             Vérification du lien en cours...
