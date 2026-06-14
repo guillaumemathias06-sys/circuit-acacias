@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
-import { Menu, X, LayoutDashboard, User, ChevronDown } from 'lucide-react'
+import { Menu, X, LayoutDashboard, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 const nav = [
@@ -15,27 +15,21 @@ const nav = [
 
 export function Header() {
   const pathname = usePathname()
-  const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [adminMenu, setAdminMenu] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const isHome = pathname === '/'
   const isInAdmin = pathname.startsWith('/admin')
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('users').select('role').single().then(({ data }) => {
+    async function checkAdmin() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase.from('users').select('role').eq('id', user.id).single()
       setIsAdmin(data?.role === 'admin')
-    })
+    }
+    checkAdmin()
   }, [])
-
-  // Ferme le menu admin si on clique ailleurs
-  useEffect(() => {
-    if (!adminMenu) return
-    const close = () => setAdminMenu(false)
-    window.addEventListener('click', close)
-    return () => window.removeEventListener('click', close)
-  }, [adminMenu])
 
   return (
     <header className={cn(
@@ -51,11 +45,9 @@ export function Header() {
             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-gray-950 font-black text-sm">CA</span>
             </div>
-            <div>
-              <span className={cn('font-bold text-base', isHome ? 'text-white' : 'text-gray-900')}>
-                Circuit Acacias
-              </span>
-            </div>
+            <span className={cn('font-bold text-base', isHome ? 'text-white' : 'text-gray-900')}>
+              Circuit Acacias
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -75,64 +67,42 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-2">
-            {isAdmin ? (
-              /* Switcher admin */
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => setAdminMenu((v) => !v)}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Switcher admin/joueur — visible uniquement pour les admins */}
+            {isAdmin && (
+              <div className={cn(
+                'flex items-center rounded-lg p-0.5 gap-0.5',
+                isHome ? 'bg-white/10' : 'bg-gray-100'
+              )}>
+                <Link
+                  href="/espace-joueur"
                   className={cn(
-                    'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isInAdmin
-                      ? 'bg-green-500 text-gray-950 font-bold'
-                      : isHome
-                        ? 'text-gray-300 hover:text-white hover:bg-white/10'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-all',
+                    !isInAdmin
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : isHome ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
                   )}
                 >
-                  {isInAdmin ? (
-                    <><LayoutDashboard size={14} /> Administration</>
-                  ) : (
-                    <><User size={14} /> Mon espace</>
+                  <User size={13} />
+                  Joueur
+                </Link>
+                <Link
+                  href="/admin"
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-all',
+                    isInAdmin
+                      ? 'bg-green-500 text-gray-950 shadow-sm'
+                      : isHome ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
                   )}
-                  <ChevronDown size={13} className={cn('transition-transform', adminMenu && 'rotate-180')} />
-                </button>
-
-                {adminMenu && (
-                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden z-50">
-                    <Link
-                      href="/espace-joueur"
-                      onClick={() => setAdminMenu(false)}
-                      className={cn(
-                        'flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                        !isInAdmin ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-                      )}
-                    >
-                      <User size={15} />
-                      <div>
-                        <p className="font-medium">Espace joueur</p>
-                        <p className="text-xs text-gray-400">Mes points et résultats</p>
-                      </div>
-                    </Link>
-                    <div className="border-t border-gray-100" />
-                    <Link
-                      href="/admin"
-                      onClick={() => setAdminMenu(false)}
-                      className={cn(
-                        'flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                        isInAdmin ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50'
-                      )}
-                    >
-                      <LayoutDashboard size={15} />
-                      <div>
-                        <p className="font-medium">Administration</p>
-                        <p className="text-xs text-gray-400">Gérer le circuit</p>
-                      </div>
-                    </Link>
-                  </div>
-                )}
+                >
+                  <LayoutDashboard size={13} />
+                  Admin
+                </Link>
               </div>
-            ) : (
+            )}
+
+            {/* Bouton Mon espace pour les non-admins */}
+            {!isAdmin && (
               <Link
                 href="/espace-joueur"
                 className={cn(
@@ -143,6 +113,7 @@ export function Header() {
                 Mon espace
               </Link>
             )}
+
             <Link
               href="/connexion"
               className="bg-green-500 hover:bg-green-400 text-gray-950 font-bold px-4 py-2 rounded-lg text-sm transition-colors"
@@ -189,7 +160,7 @@ export function Header() {
             <Link
               href="/admin"
               onClick={() => setOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm font-medium text-green-600 hover:bg-green-50"
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-green-600 hover:bg-green-50"
             >
               Administration
             </Link>
