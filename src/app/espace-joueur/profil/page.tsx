@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ const FFT_RANKINGS = [
   '5/6', '4/6', '3/6', '2/6', '1/6', 'N.C.',
 ]
 
-export default function ProfilPage() {
+function ProfilPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const justUpdated = searchParams.get('updated') === '1'
@@ -231,5 +231,13 @@ export default function ProfilPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function ProfilPage() {
+  return (
+    <Suspense>
+      <ProfilPageInner />
+    </Suspense>
   )
 }
