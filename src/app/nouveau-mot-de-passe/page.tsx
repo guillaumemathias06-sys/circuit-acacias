@@ -16,10 +16,26 @@ export default function NouveauMotDePassePage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
-      else setError('Lien expiré ou invalide. Demandez une nouvelle invitation à l\'administrateur.')
-    })
+
+    // generateLink redirige avec #access_token=...&refresh_token=... dans le hash
+    const hash = window.location.hash.substring(1)
+    const params = new URLSearchParams(hash)
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error }) => {
+          if (error) setError('Lien expiré ou invalide. Demandez une nouvelle invitation.')
+          else setReady(true)
+        })
+    } else {
+      // Session déjà établie (ex: rechargement de page)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) setReady(true)
+        else setError('Lien expiré ou invalide. Demandez une nouvelle invitation à l\'administrateur.')
+      })
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {

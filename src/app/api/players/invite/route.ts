@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   const { data: linkData } = await admin.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: `${siteUrl}/auth/callback?next=/nouveau-mot-de-passe` },
+    options: { redirectTo: `${siteUrl}/nouveau-mot-de-passe` },
   })
 
   const resetLink = linkData?.properties?.action_link ?? `${siteUrl}/connexion`
