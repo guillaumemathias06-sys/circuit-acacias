@@ -24,14 +24,14 @@ export async function POST(req: NextRequest) {
   const existingAuthUser = existingUsers?.users?.find((u) => u.email === email)
 
   let userId: string
-  let password: string | null = null
+  // Générer un mot de passe temporaire à chaque invitation
+  const password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-4).toUpperCase() + '!'
 
   if (existingAuthUser) {
     userId = existingAuthUser.id
+    // Mettre à jour le mot de passe pour que le joueur puisse se connecter
+    await admin.auth.admin.updateUserById(userId, { password })
   } else {
-    // Générer un mot de passe temporaire aléatoire
-    password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-4).toUpperCase() + '!'
-
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
       password,
@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Envoyer l'email de bienvenue via Gmail API
-  if (password) {
+  // Envoyer l'email de bienvenue
+  {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://circuit-acacias.vercel.app'
     try {
       await sendGmail({
