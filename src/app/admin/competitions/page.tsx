@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { COMPETITION_STATUS_LABELS, COMPETITION_STATUS_COLORS, formatDateShort } from '@/lib/utils'
@@ -26,6 +26,13 @@ export default async function AdminCompetitionsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {(competitions ?? []).length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <Calendar size={32} className="mx-auto mb-3 opacity-30" />
+            <p>Aucune compétition pour le moment.</p>
+            <p className="text-sm mt-1">Créez la première compétition avec le bouton ci-dessus.</p>
+          </div>
+        ) : (
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
             <tr>
@@ -62,6 +69,7 @@ export default async function AdminCompetitionsPage() {
             ))}
           </tbody>
         </table>
+        )}
       </div>
     </div>
   )
