@@ -45,8 +45,10 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-6 text-center text-xs text-gray-600">
-          © 2026 Tennis Club des Acacias — Circuit Acacias
+        <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center text-xs text-gray-600">
+          <span>© 2026 Tennis Club des Acacias — Circuit Acacias</span>
+          <span className="hidden sm:inline">·</span>
+          <Link href="/mentions-legales" className="hover:text-gray-300 transition-colors">Mentions légales & CGU</Link>
         </div>
       </div>
     </footer>

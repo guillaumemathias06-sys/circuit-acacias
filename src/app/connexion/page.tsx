@@ -14,6 +14,7 @@ export default function ConnexionPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [acceptCgu, setAcceptCgu] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -21,6 +22,11 @@ export default function ConnexionPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (mode === 'register' && !acceptCgu) {
+      setError('Vous devez accepter les mentions légales et CGU pour créer un compte.')
+      return
+    }
 
     if (mode === 'login') {
       setLoading(true)
@@ -191,6 +197,24 @@ export default function ConnexionPage() {
                     className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
                   />
                 </div>
+              )}
+
+              {mode === 'register' && (
+                <label className="flex items-start gap-2.5 text-xs text-gray-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptCgu}
+                    onChange={(e) => setAcceptCgu(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-gray-700 bg-gray-900 text-green-500 focus:ring-green-500"
+                  />
+                  <span>
+                    J&apos;accepte les{' '}
+                    <Link href="/mentions-legales" target="_blank" className="text-green-400 hover:text-green-300 underline">
+                      mentions légales et CGU
+                    </Link>{' '}
+                    du Circuit Acacias.
+                  </span>
+                </label>
               )}
 
               {mode === 'login' && (
