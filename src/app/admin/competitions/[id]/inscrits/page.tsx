@@ -119,7 +119,8 @@ export default function InscritsPage({ params }: Props) {
     setLoading(false)
   }
 
-  async function removeRegistration(regId: string) {
+  async function removeRegistration(regId: string, name: string) {
+    if (!confirm(`Retirer ${name} de cette compétition ?`)) return
     await supabase.from('registrations').delete().eq('id', regId)
     load()
   }
@@ -174,7 +175,10 @@ export default function InscritsPage({ params }: Props) {
                   <td className="px-4 py-3 text-center text-gray-400 text-xs">{r.raw_fft_license}</td>
                   <td className="px-4 py-3 text-center text-xs text-gray-400">{r.source}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => removeRegistration(r.id)} className="text-red-400 hover:text-red-600">
+                    <button
+                      onClick={() => removeRegistration(r.id, `${r.user?.first_name ?? r.raw_first_name} ${r.user?.last_name ?? r.raw_last_name}`)}
+                      className="text-red-400 hover:text-red-600"
+                    >
                       <Trash2 size={14} />
                     </button>
                   </td>

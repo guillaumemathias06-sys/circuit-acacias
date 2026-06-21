@@ -11,6 +11,8 @@ export default function ConnexionPage() {
   const [mode, setMode] = useState<'login' | 'register'>('register')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -19,16 +21,21 @@ export default function ConnexionPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
 
     if (mode === 'login') {
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError('Email ou mot de passe incorrect.'); setLoading(false); return }
       router.push('/espace-joueur')
     } else {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) { setError(error.message); setLoading(false); return }
-      setSuccess('Compte créé ! Vérifiez votre boîte email pour confirmer votre inscription.')
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, first_name: firstName, last_name: lastName }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Erreur lors de la création du compte.'); setLoading(false); return }
+      setSuccess('Vérifiez votre boîte email pour créer votre mot de passe et accéder à votre espace joueur.')
       setLoading(false)
     }
   }
@@ -121,6 +128,30 @@ export default function ConnexionPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'register' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Prénom</label>
+                    <input
+                      required
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Marie"
+                      className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Nom</label>
+                    <input
+                      required
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Dupont"
+                      className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                 <input
@@ -132,18 +163,19 @@ export default function ConnexionPage() {
                   className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="6 caractères minimum"
-                  className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
-                />
-              </div>
+              {mode === 'login' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Votre mot de passe"
+                    className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                  />
+                </div>
+              )}
 
               {mode === 'login' && (
                 <div className="text-right">
