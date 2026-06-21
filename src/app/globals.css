@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* Palette Circuit Acacias — dérivée du logo du club (teal + marine) */
+@theme {
+  --color-green-50: #eaf7f9;
+  --color-green-100: #cfeef2;
+  --color-green-200: #9fdde6;
+  --color-green-300: #6fccda;
+  --color-green-400: #45b6c7;
+  --color-green-500: #28a5bb;
+  --color-green-600: #1f8a9e;
+  --color-green-700: #1a7383;
+  --color-green-800: #165f6c;
+  --color-green-900: #134e59;
+  --color-green-950: #0d3640;
+
+  --color-gray-950: #0d2733;
+}
+
 @layer base {
   .input {
     @apply w-full bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors;

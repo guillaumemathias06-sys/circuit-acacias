@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Trophy, Star, Shield } from 'lucide-react'
 
 export default function ConnexionPage() {
@@ -58,9 +59,7 @@ export default function ConnexionPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:48px_48px]" />
         <div className="relative">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <span className="text-gray-950 font-black text-sm">CA</span>
-            </div>
+            <Image src="/logo.png" alt="Circuit Acacias" width={32} height={32} className="rounded-lg" />
             <span className="text-white font-bold">Circuit Acacias</span>
           </Link>
         </div>
@@ -96,9 +95,7 @@ export default function ConnexionPage() {
           {/* Logo mobile */}
           <div className="lg:hidden mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-gray-950 font-black text-sm">CA</span>
-              </div>
+              <Image src="/logo.png" alt="Circuit Acacias" width={32} height={32} className="rounded-lg" />
               <span className="text-white font-bold">Circuit Acacias</span>
             </Link>
           </div>

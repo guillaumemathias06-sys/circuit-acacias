@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -42,9 +43,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
 
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-gray-950 font-black text-sm">CA</span>
-            </div>
+            <Image src="/logo.png" alt="Circuit Acacias" width={36} height={36} className="rounded-lg flex-shrink-0" />
             <span className={cn('font-bold text-base', isHome ? 'text-white' : 'text-gray-900')}>
               Circuit Acacias
             </span>
