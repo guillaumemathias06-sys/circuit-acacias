@@ -145,6 +145,14 @@ export default function ConnexionPage() {
                 />
               </div>
 
+              {mode === 'login' && (
+                <div className="text-right">
+                  <Link href="/mot-de-passe-oublie" className="text-xs text-green-400 hover:text-green-300 transition-colors">
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
+              )}
+
               {error && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
                   {error}
