@@ -11,6 +11,7 @@ export default function ConnexionPage() {
   const [mode, setMode] = useState<'login' | 'register'>('register')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,23 +20,26 @@ export default function ConnexionPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
     if (mode === 'login') {
+      setLoading(true)
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError('Email ou mot de passe incorrect.'); setLoading(false); return }
       router.push('/espace-joueur')
     } else {
+      if (password.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères.'); return }
+      if (password !== confirmPassword) { setError('Les mots de passe ne correspondent pas.'); return }
+      setLoading(true)
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, first_name: firstName, last_name: lastName }),
+        body: JSON.stringify({ email, password, first_name: firstName, last_name: lastName }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Erreur lors de la création du compte.'); setLoading(false); return }
-      setSuccess('Vérifiez votre boîte email pour créer votre mot de passe et accéder à votre espace joueur.')
+      setSuccess('Vérifiez votre boîte email pour confirmer votre inscription et accéder à votre espace joueur.')
       setLoading(false)
     }
   }
@@ -163,15 +167,27 @@ export default function ConnexionPage() {
                   className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
                 />
               </div>
-              {mode === 'login' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                <input
+                  type="password"
+                  required
+                  minLength={mode === 'register' ? 8 : undefined}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === 'register' ? '8 caractères minimum' : 'Votre mot de passe'}
+                  className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
+                />
+              </div>
+              {mode === 'register' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirmer le mot de passe</label>
                   <input
                     type="password"
                     required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Votre mot de passe"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Répétez votre mot de passe"
                     className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-colors"
                   />
                 </div>
