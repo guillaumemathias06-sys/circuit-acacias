@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { LayoutDashboard, Calendar, Users, Trophy, Star, BarChart3 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 
 const adminNav = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -10,7 +12,14 @@ const adminNav = [
   { href: '/admin/masters', label: 'Masters', icon: Star },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/connexion')
+
+  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') redirect('/')
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <aside className="w-56 bg-white border-r border-gray-200 flex-shrink-0 hidden md:block">
