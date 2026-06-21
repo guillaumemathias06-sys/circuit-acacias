@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, Trophy, Star, ChevronRight, Shield, Calendar, Users } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 
 const stats = [
   { value: '8', label: 'Classements' },
@@ -36,7 +37,23 @@ const steps = [
   { n: '04', title: 'Qualifiez-vous au Masters', desc: 'Les 8 meilleurs de chaque catégorie s\'affrontent lors du Masters de fin de saison.' },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data: scale } = await supabase
+    .from('points_scales')
+    .select('*, rows:points_scale_rows(*)')
+    .eq('active', true)
+    .order('competition_size', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  const scaleRows = (scale?.rows ?? [])
+    .sort((a: { position_min: number }, b: { position_min: number }) => a.position_min - b.position_min)
+    .slice(0, 8)
+
+  const maxPoints = scaleRows[0]?.points ?? 1
+  const barColors = ['bg-yellow-400', 'bg-gray-300', 'bg-amber-600', 'bg-green-500', 'bg-green-600', 'bg-green-700', 'bg-green-800', 'bg-green-900']
+
   return (
     <div className="bg-white">
 
@@ -177,24 +194,22 @@ export default function HomePage() {
             </div>
 
             <div className="bg-gray-950 rounded-2xl p-6 text-white">
-              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4 font-semibold">Barème TMC 8 joueurs</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-4 font-semibold">
+                Barème {scale?.name ?? ''}
+              </p>
               <div className="space-y-2">
-                {[
-                  { pos: '1er', pts: 100, w: 'w-full', color: 'bg-yellow-400' },
-                  { pos: '2e', pts: 80, w: 'w-4/5', color: 'bg-gray-300' },
-                  { pos: '3e', pts: 65, w: 'w-[65%]', color: 'bg-amber-600' },
-                  { pos: '4e', pts: 50, w: 'w-1/2', color: 'bg-green-500' },
-                  { pos: '5e', pts: 40, w: 'w-[40%]', color: 'bg-green-600' },
-                  { pos: '6e', pts: 30, w: 'w-[30%]', color: 'bg-green-700' },
-                  { pos: '7e', pts: 20, w: 'w-1/5', color: 'bg-green-800' },
-                  { pos: '8e', pts: 10, w: 'w-[10%]', color: 'bg-green-900' },
-                ].map(({ pos, pts, w, color }) => (
-                  <div key={pos} className="flex items-center gap-3">
-                    <span className="text-gray-400 text-xs w-6 text-right">{pos}</span>
+                {scaleRows.map((row: { id: string; position_min: number; position_max: number; points: number }, i: number) => (
+                  <div key={row.id} className="flex items-center gap-3">
+                    <span className="text-gray-400 text-xs w-6 text-right">
+                      {row.position_min === row.position_max ? `${row.position_min}e` : `${row.position_min}-${row.position_max}e`}
+                    </span>
                     <div className="flex-1 bg-gray-800 rounded-full h-2">
-                      <div className={`${w} ${color} h-2 rounded-full`} />
+                      <div
+                        className={`${barColors[i] ?? 'bg-green-900'} h-2 rounded-full`}
+                        style={{ width: `${Math.max(8, (row.points / maxPoints) * 100)}%` }}
+                      />
                     </div>
-                    <span className="text-white font-bold text-sm w-14 text-right">{pts} pts</span>
+                    <span className="text-white font-bold text-sm w-14 text-right">{row.points} pts</span>
                   </div>
                 ))}
               </div>
