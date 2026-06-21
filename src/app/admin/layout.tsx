@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { LayoutDashboard, Calendar, Users, Trophy, Star, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Calendar, Users, Trophy, Star, BarChart3, ListOrdered } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 const adminNav = [
@@ -10,6 +10,7 @@ const adminNav = [
   { href: '/admin/resultats', label: 'Résultats', icon: Trophy },
   { href: '/admin/classement', label: 'Classement', icon: BarChart3 },
   { href: '/admin/masters', label: 'Masters', icon: Star },
+  { href: '/admin/baremes', label: 'Barèmes de points', icon: ListOrdered },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

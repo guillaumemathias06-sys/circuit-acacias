@@ -83,9 +83,8 @@ export default function ResultatsPage({ params }: Props) {
       await supabase.from('results').insert(inserts)
     }
 
-    // Déclencher l'attribution des points via RPC
+    // Déclenche l'attribution des points et le passage au statut "finished" (géré côté SQL)
     await supabase.rpc('award_points_for_competition', { p_competition_id: id })
-    await supabase.from('competitions').update({ status: 'finished' }).eq('id', id)
 
     setLoading(false)
     setSaved(true)

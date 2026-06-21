@@ -1,11 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
-import { BarChart3, RefreshCw } from 'lucide-react'
+import { BarChart3 } from 'lucide-react'
+import Link from 'next/link'
 import { MASTERS_STATUS_LABELS } from '@/lib/utils'
+import { ExportCsvButton } from '@/components/admin/ExportCsvButton'
 
-export default async function AdminClassementPage() {
+interface Props {
+  searchParams: Promise<{ season?: string }>
+}
+
+export default async function AdminClassementPage({ searchParams }: Props) {
+  const { season: seasonParam } = await searchParams
   const supabase = await createClient()
 
-  const { data: season } = await supabase.from('seasons').select('*').eq('active', true).single()
+  const { data: seasons } = await supabase.from('seasons').select('*').order('start_date', { ascending: false })
+  const { data: activeSeason } = await supabase.from('seasons').select('*').eq('active', true).single()
+  const season = seasonParam ? seasons?.find((s) => s.id === seasonParam) ?? activeSeason : activeSeason
+
   const { data: categories } = await supabase.from('categories').select('*').eq('active', true).order('sort_order')
   const { data: rankings } = await supabase
     .from('rankings')
@@ -18,11 +28,37 @@ export default async function AdminClassementPage() {
     return acc
   }, {})
 
+  const exportRows = (rankings ?? []).map((r) => ({
+    rank: r.rank, first_name: r.user?.first_name ?? null, last_name: r.user?.last_name ?? null,
+    fft_club: r.user?.fft_club ?? null, fft_ranking: r.user?.fft_ranking ?? null,
+    competitions_played: r.competitions_played, retained_points: r.retained_points,
+    total_points: r.total_points, masters_status: r.masters_status,
+    category: r.category?.name ?? '',
+  }))
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-2">
         <BarChart3 size={22} className="text-green-600" />
         <h1 className="text-2xl font-bold text-gray-900">Classement Circuit</h1>
+        <div className="ml-auto flex items-center gap-3">
+          {seasons && seasons.length > 1 && (
+            <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg p-1">
+              {seasons.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/admin/classement?season=${s.id}`}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    season?.id === s.id ? 'bg-green-600 text-white' : 'text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {s.name}
+                </Link>
+              ))}
+            </div>
+          )}
+          <ExportCsvButton rows={exportRows} filename={`classement-${season?.name ?? 'circuit'}.csv`} />
+        </div>
       </div>
       <p className="text-sm text-gray-500 mb-6">
         Le classement est recalculé automatiquement à chaque validation de résultats.

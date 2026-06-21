@@ -23,7 +23,7 @@ export default async function CompetitionDetailPage({ params }: Props) {
 
   const { data: registrations } = await supabase
     .from('registrations')
-    .select('*, user:users(first_name, last_name, fft_ranking, fft_club)')
+    .select('*, user:public_profiles(first_name, last_name, fft_ranking, fft_club)')
     .eq('competition_id', id)
     .in('status', ['registered', 'confirmed'])
 

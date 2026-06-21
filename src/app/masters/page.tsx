@@ -17,7 +17,7 @@ export default async function MastersPage() {
 
   const { data: qualified } = await supabase
     .from('rankings')
-    .select('*, user:users(first_name, last_name, fft_ranking, fft_club), category:categories(name, id)')
+    .select('*, user:public_profiles(first_name, last_name, fft_ranking, fft_club), category:categories(name, id)')
     .eq('season_id', season?.id ?? '')
     .neq('masters_status', 'none')
     .order('rank', { ascending: true })

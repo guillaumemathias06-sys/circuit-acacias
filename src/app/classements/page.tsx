@@ -1,18 +1,27 @@
 import { createClient } from '@/lib/supabase/server'
 import { Trophy, Medal, Crown } from 'lucide-react'
+import Link from 'next/link'
 import { MASTERS_STATUS_LABELS } from '@/lib/utils'
 import type { Ranking } from '@/types'
 
 export const revalidate = 60
 
-export default async function ClassementsPage() {
+interface Props {
+  searchParams: Promise<{ saison?: string }>
+}
+
+export default async function ClassementsPage({ searchParams }: Props) {
+  const { saison: saisonParam } = await searchParams
   const supabase = await createClient()
 
-  const { data: season } = await supabase.from('seasons').select('*').eq('active', true).single()
+  const { data: seasons } = await supabase.from('seasons').select('*').order('start_date', { ascending: false })
+  const { data: activeSeason } = await supabase.from('seasons').select('*').eq('active', true).single()
+  const season = saisonParam ? seasons?.find((s) => s.id === saisonParam) ?? activeSeason : activeSeason
+
   const { data: categories } = await supabase.from('categories').select('*').eq('active', true).order('sort_order')
   const { data: rankings } = await supabase
     .from('rankings')
-    .select('*, user:users(first_name, last_name, fft_ranking, fft_club), category:categories(name)')
+    .select('*, user:public_profiles(first_name, last_name, fft_ranking, fft_club), category:categories(name)')
     .eq('season_id', season?.id ?? '')
     .order('rank', { ascending: true })
 
@@ -31,9 +40,24 @@ export default async function ClassementsPage() {
             {season?.name ?? 'Saison en cours'}
           </div>
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">Classements</h1>
-          <p className="text-gray-400 text-lg max-w-xl">
+          <p className="text-gray-400 text-lg max-w-xl mb-6">
             Classements par catégorie — mis à jour automatiquement après chaque compétition.
           </p>
+          {seasons && seasons.length > 1 && (
+            <div className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg p-1">
+              {seasons.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/classements?saison=${s.id}`}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    season?.id === s.id ? 'bg-green-500 text-gray-950' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {s.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -79,7 +103,9 @@ export default async function ClassementsPage() {
                               : <span className="text-sm font-bold text-gray-400">{r.rank}</span>}
                           </td>
                           <td className="px-5 py-4">
-                            <p className="font-bold text-gray-900 text-sm">{r.user?.first_name} {r.user?.last_name}</p>
+                            <Link href={`/joueurs/${r.user_id}`} className="font-bold text-gray-900 text-sm hover:text-green-700 transition-colors">
+                              {r.user?.first_name} {r.user?.last_name}
+                            </Link>
                           </td>
                           <td className="px-5 py-4 text-sm text-gray-500 hidden md:table-cell">{r.user?.fft_club}</td>
                           <td className="px-5 py-4 text-center hidden sm:table-cell">
