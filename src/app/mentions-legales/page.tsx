@@ -22,7 +22,7 @@ export default function MentionsLegalesPage() {
           <p>
             Le site Circuit Acacias est édité par le Tennis Club Les Acacias, association loi 1901.<br />
             Siège social : 2500 chemin des Colles et des Régagnades, 06610 La Gaude.<br />
-            Numéro SIRET / RNA : <span className="text-gray-400">[à compléter]</span><br />
+            Numéro SIRET : 397 508 425 00022<br />
             Contact : <a href="mailto:tennisclubacacias@gmail.com" className="text-green-700 hover:underline">tennisclubacacias@gmail.com</a>
           </p>
         </section>
@@ -30,7 +30,7 @@ export default function MentionsLegalesPage() {
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-2">2. Directeur de la publication</h2>
           <p>
-            Le directeur de la publication est le président du Tennis Club Les Acacias en exercice. <span className="text-gray-400">[Nom à compléter]</span>
+            La directrice de la publication est Madame Marie-Noëlle RAGNI, présidente du Tennis Club Les Acacias.
           </p>
         </section>
 
