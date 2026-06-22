@@ -2,33 +2,11 @@ import Link from 'next/link'
 import { ArrowRight, Trophy, Star, ChevronRight, Shield, Calendar, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
-const stats = [
-  { value: '8', label: 'Classements' },
-  { value: '8+', label: 'Étapes par saison' },
-  { value: '100', label: 'Points max par étape' },
-  { value: '1', label: 'Masters final' },
-]
-
-const categoryGroups = [
-  {
-    group: 'Hommes',
-    color: 'from-blue-600 to-blue-800',
-    sub: ['4e série', '3e série'],
-    desc: 'Joueurs classés FFT 3e et 4e série',
-  },
-  {
-    group: 'Femmes',
-    color: 'from-rose-500 to-rose-700',
-    sub: ['4e série', '3e série'],
-    desc: 'Joueuses classées FFT 3e et 4e série',
-  },
-  {
-    group: 'Jeunes',
-    color: 'from-amber-500 to-amber-700',
-    sub: ['11/12 ans', '13/14 ans', '15/16 ans', '17/18 ans'],
-    desc: 'Compétiteurs en développement',
-  },
-]
+const groupStyles: Record<string, { color: string; desc: string }> = {
+  Hommes: { color: 'from-blue-600 to-blue-800', desc: 'Joueurs classés FFT' },
+  Femmes: { color: 'from-rose-500 to-rose-700', desc: 'Joueuses classées FFT' },
+  Jeunes: { color: 'from-amber-500 to-amber-700', desc: 'Compétiteurs en développement' },
+}
 
 const steps = [
   { n: '01', title: 'Créez votre compte', desc: 'Inscrivez-vous en 1 minute sur la plateforme Circuit Acacias.' },
@@ -53,6 +31,32 @@ export default async function HomePage() {
 
   const maxPoints = scaleRows[0]?.points ?? 1
   const barColors = ['bg-yellow-400', 'bg-gray-300', 'bg-amber-600', 'bg-green-500', 'bg-green-600', 'bg-green-700', 'bg-green-800', 'bg-green-900']
+
+  const { data: categories } = await supabase.from('categories').select('*').eq('active', true).order('sort_order')
+  const adultCats = (categories ?? []).filter((c) => !c.age_min)
+  const juniorCats = (categories ?? []).filter((c) => c.age_min)
+
+  const categoryGroups = [
+    {
+      group: 'Hommes',
+      sub: adultCats.filter((c) => c.gender === 'M').map((c) => c.name.replace('Hommes ', '')),
+    },
+    {
+      group: 'Femmes',
+      sub: adultCats.filter((c) => c.gender === 'F').map((c) => c.name.replace('Femmes ', '')),
+    },
+    {
+      group: 'Jeunes',
+      sub: juniorCats.map((c) => c.name),
+    },
+  ].filter((g) => g.sub.length > 0)
+
+  const stats = [
+    { value: String((categories ?? []).length), label: 'Classements' },
+    { value: '8+', label: 'Étapes par saison' },
+    { value: '100', label: 'Points max par étape' },
+    { value: '1', label: 'Masters final' },
+  ]
 
   return (
     <div className="bg-white">
@@ -147,14 +151,14 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-green-400 font-semibold text-sm uppercase tracking-widest mb-3">Votre niveau, votre circuit</p>
-            <h2 className="text-4xl font-black text-white mb-4">3 groupes,<br />8 classements distincts</h2>
+            <h2 className="text-4xl font-black text-white mb-4">{categoryGroups.length} groupes,<br />{(categories ?? []).length} classements distincts</h2>
             <p className="text-gray-400 max-w-xl mx-auto">Hommes, Femmes, Jeunes — chaque groupe est divisé en sous-catégories avec son propre classement et ses qualifiés au Masters final.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {categoryGroups.map(({ group, color, sub, desc }) => (
+            {categoryGroups.map(({ group, sub }) => (
               <Link key={group} href="/classements" className="group relative overflow-hidden rounded-2xl">
-                <div className={`bg-gradient-to-br ${color} p-6 flex flex-col justify-between min-h-48`}>
+                <div className={`bg-gradient-to-br ${groupStyles[group]?.color ?? 'from-gray-600 to-gray-800'} p-6 flex flex-col justify-between min-h-48`}>
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
                       <Trophy size={18} className="text-white" />
@@ -163,7 +167,7 @@ export default async function HomePage() {
                   </div>
                   <div>
                     <h3 className="font-black text-white text-2xl mb-1">{group}</h3>
-                    <p className="text-white/60 text-xs mb-3">{desc}</p>
+                    <p className="text-white/60 text-xs mb-3">{groupStyles[group]?.desc ?? ''}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {sub.map((s) => (
                         <span key={s} className="bg-white/15 text-white/90 text-xs px-2 py-0.5 rounded-full font-medium">{s}</span>
