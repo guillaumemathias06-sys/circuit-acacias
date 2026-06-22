@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ScrollText, Trophy, Users, ShieldCheck } from 'lucide-react'
+import { BaremesTabs } from '@/components/reglement/BaremesTabs'
 
 export const revalidate = 60
 
@@ -59,28 +60,7 @@ export default async function ReglementPage() {
             Le vainqueur marque toujours <strong className="text-gray-800">100 points</strong>, quelle que soit la taille du tableau.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {(scales ?? []).map((scale) => {
-              const rows = (scale.rows ?? []).sort(
-                (a: { position_min: number }, b: { position_min: number }) => a.position_min - b.position_min
-              )
-              return (
-                <div key={scale.id} className="bg-gray-950 rounded-2xl p-5">
-                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-4 font-semibold">{scale.name}</p>
-                  <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-                    {rows.map((row: { id: string; position_min: number; position_max: number; points: number }) => (
-                      <div key={row.id} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">
-                          {row.position_min === row.position_max ? `${row.position_min}e` : `${row.position_min}e–${row.position_max}e`}
-                        </span>
-                        <span className="text-white font-bold">{row.points} pts</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <BaremesTabs scales={scales ?? []} />
         </section>
 
         {/* Classement */}
