@@ -155,10 +155,10 @@ export default async function HomePage() {
             <p className="text-gray-400 max-w-xl mx-auto">Hommes, Femmes, Jeunes — chaque groupe est divisé en sous-catégories avec son propre classement et ses qualifiés au Masters final.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-stretch">
             {categoryGroups.map(({ group, sub }) => (
-              <Link key={group} href="/classements" className="group relative overflow-hidden rounded-2xl">
-                <div className={`bg-gradient-to-br ${groupStyles[group]?.color ?? 'from-gray-600 to-gray-800'} p-6 flex flex-col justify-between min-h-48`}>
+              <Link key={group} href="/classements" className="group relative overflow-hidden rounded-2xl flex">
+                <div className={`bg-gradient-to-br ${groupStyles[group]?.color ?? 'from-gray-600 to-gray-800'} p-6 flex flex-col justify-between min-h-48 w-full`}>
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
                       <Trophy size={18} className="text-white" />
