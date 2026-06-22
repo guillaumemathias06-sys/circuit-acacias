@@ -12,6 +12,7 @@ const nav = [
   { href: '/competitions', label: 'Compétitions' },
   { href: '/classements', label: 'Classements' },
   { href: '/masters', label: 'Masters' },
+  { href: '/reglement', label: 'Règlement' },
 ]
 
 export function Header() {

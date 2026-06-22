@@ -23,6 +23,7 @@ export function Footer() {
                 ['/competitions', 'Compétitions'],
                 ['/classements', 'Classements'],
                 ['/masters', 'Masters'],
+                ['/reglement', 'Règlement'],
                 ['/espace-joueur', 'Mon espace'],
               ].map(([href, label]) => (
                 <li key={href}>
